@@ -1,40 +1,52 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&family=Georgia:ital@1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 @import "tailwindcss";
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  --font-serif: "Georgia", serif;
-  
-  --color-industrial-bg: #111827;
-  --color-industrial-card: #1F2937;
-  --color-industrial-line: #374151;
-  --color-industrial-accent: #3B82F6;
-  --color-industrial-text: #F3F4F6;
-  --color-industrial-muted: #9CA3AF;
+
+  /* Core palette — 5 colors total */
+  --color-surface-0:  #0a0a0b;   /* page background */
+  --color-surface-1:  #111113;   /* card background */
+  --color-surface-2:  #1a1a1e;   /* elevated card / toolbar */
+  --color-border:     #27272d;   /* subtle borders */
+  --color-border-hi:  #3a3a45;   /* hover / focus border */
+  --color-text:       #f2f2f4;   /* primary text */
+  --color-muted:      #71717a;   /* secondary text */
+  --color-accent:     #3b82f6;   /* blue accent */
+  --color-accent-hi:  #60a5fa;   /* lighter blue */
+  --color-success:    #22c55e;   /* green */
+  --color-warning:    #f97316;   /* orange */
+  --color-danger:     #ef4444;   /* red */
+
+  /* Legacy aliases kept for compatibility */
+  --color-industrial-bg:    var(--color-surface-0);
+  --color-industrial-card:  var(--color-surface-1);
+  --color-industrial-line:  var(--color-border);
+  --color-industrial-accent:var(--color-accent);
+  --color-industrial-text:  var(--color-text);
+  --color-industrial-muted: var(--color-muted);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  background-color: var(--color-surface-0);
+  color: var(--color-text);
 }
 
 body {
-  background-color: var(--color-industrial-bg);
-  color: var(--color-industrial-text);
+  background-color: var(--color-surface-0);
+  color: var(--color-text);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-.data-grid-row {
-  display: grid;
-  grid-template-columns: 60px 1.5fr 1fr 1fr 0.8fr;
-  border-bottom: 1px solid var(--color-industrial-line);
-}
-
-.data-grid-row:hover {
-  background: #1F2937;
-}
-
-.mono-value {
-  font-family: var(--font-mono);
-}
-
-.italic-serif {
-  font-family: var(--font-serif);
-  font-style: italic;
-}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-hi); }
