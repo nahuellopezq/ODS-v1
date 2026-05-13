@@ -21,8 +21,8 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 import * as pdfjs from "pdfjs-dist";
 
-// Cargar el worker de PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Cargar el worker de PDF.js de forma compatible
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -45,18 +45,78 @@ export interface ObraPlan {
 // --- Helpers ---
 const extractTextFromPDF = async (file: File): Promise<string> => {
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-  let fullText = "";
+  try {
+    const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+    const pdf = await loadingTask.promise;
+    let fullText = "";
 
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(" ");
-    fullText += pageText + "\n";
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items.map((item: any) => item.str).join(" ");
+      fullText += pageText + "\n";
+    }
+
+    if (!fullText.trim()) throw new Error("No se pudo extraer texto del PDF.");
+    return fullText;
+  } catch (err) {
+    console.error("PDF Extraction Error:", err);
+    throw new Error("Error al procesar el PDF. Asegúrate de que no esté protegido o dañado.");
   }
-
-  return fullText;
 };
+
+// --- Deployment Guide Component ---
+const VercelGuide = ({ onClose }: { onClose: () => void }) => (
+  <motion.div 
+    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+    className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+  >
+    <div className="bg-industrial-card border border-industrial-line rounded-2xl max-w-2xl w-full p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold flex items-center gap-2">
+          <Download size={20} className="text-blue-400" />
+          Guía de Despliegue en Vercel
+        </h3>
+        <button onClick={onClose} className="text-industrial-muted hover:text-white"><X size={24} /></button>
+      </div>
+      
+      <div className="space-y-6 text-sm text-industrial-muted">
+        <section>
+          <h4 className="text-white font-bold mb-2">1. Obtener API Key de Gemini</h4>
+          <p>Visita <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-blue-400 underline">Google AI Studio</a> y genera una API Key gratuita.</p>
+        </section>
+
+        <section>
+          <h4 className="text-white font-bold mb-2">2. Configurar en Vercel</h4>
+          <p>En el panel de tu proyecto en Vercel, ve a: <br/> 
+          <code className="bg-black/40 px-2 py-1 rounded text-orange-400">Settings &rarr; Environment Variables</code></p>
+          <div className="mt-2 space-y-2">
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-mono text-white w-32">Variable Name:</span>
+              <code className="bg-black/40 px-2 py-1 rounded text-blue-400">GEMINI_API_KEY</code>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <span className="font-mono text-white w-32">Variable Value:</span>
+              <code className="bg-black/40 px-2 py-1 rounded text-green-400">tu_api_key_aqui</code>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h4 className="text-white font-bold mb-2">3. Redeploy</h4>
+          <p>Realiza un nuevo despliegue o pulsa "Redeploy" en Vercel. El sistema detectará automáticamente la clave y habilitará el motor de IA.</p>
+        </section>
+      </div>
+      
+      <button 
+        onClick={onClose}
+        className="w-full mt-8 bg-blue-600 hover:bg-blue-500 text-white py-3 rounded-xl font-bold transition-all shadow-lg"
+      >
+        ENTENDIDO
+      </button>
+    </div>
+  </motion.div>
+);
 
 // --- AI Service ---
 async function analyzeServiceOrder(orderContent: string): Promise<ObraPlan> {
@@ -133,6 +193,7 @@ export default function App() {
   const [result, setResult] = useState<ObraPlan | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAnalyze = async (textToAnalyze?: string) => {
@@ -225,9 +286,12 @@ export default function App() {
             <FileText size={18} />
             Historial de Planes
           </button>
-          <button className="w-full flex items-center gap-3 px-3 py-2 text-industrial-muted hover:bg-white/5 hover:text-white rounded-md text-sm transition-colors">
-            <BarChart3 size={18} />
-            Analítica de Costos
+          <button 
+            onClick={() => setShowGuide(true)}
+            className="w-full flex items-center gap-3 px-3 py-2 text-industrial-muted hover:bg-white/5 hover:text-white rounded-md text-sm transition-colors"
+          >
+            <Download size={18} />
+            Guía Vercel
           </button>
         </nav>
 
@@ -514,6 +578,10 @@ export default function App() {
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {showGuide && <VercelGuide onClose={() => setShowGuide(false)} />}
+        </AnimatePresence>
       </main>
     </div>
   );
