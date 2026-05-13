@@ -1,0 +1,6 @@
+{
+  "name": "ObraMaster AI",
+  "description": "Analizador inteligente de Órdenes de Servicio para la generación automática de planes de obra, estimación de materiales y costos de mano de obra.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
